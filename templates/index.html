@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SEO Tools API</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .container { max-width: 800px; }
+        .tab-content { margin-top: 20px; }
+        .loading { display: none; }
+        .loading.active { 
+            display: inline-block;
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="text-center mb-4">✨ SEO Tools API</h1>
+        
+        <ul class="nav nav-tabs" id="myTab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="url-tab" data-bs-toggle="tab" data-bs-target="#url" type="button">URL Analysis</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="content-tab" data-bs-toggle="tab" data-bs-target="#content" type="button">Custom Content</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="paraphrase-tab" data-bs-toggle="tab" data-bs-target="#paraphrase" type="button">Paraphrase</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="product-tab" data-bs-toggle="tab" data-bs-target="#product" type="button">Product Description</button>
+            </li>
+        </ul>
+
+        <div class="tab-content" id="myTabContent">
+            <!-- URL Analysis Tab -->
+            <div class="tab-pane fade show active" id="url">
+                <div class="mb-3">
+                    <input type="url" class="form-control mb-2" id="urlInput" placeholder="Enter URL">
+                    <input type="text" class="form-control mb-2" id="urlCompanyInput" placeholder="Enter your company name (default: Prachine Bangla)">
+                    <button class="btn btn-primary mt-2" onclick="analyzeUrl()">
+                        Analyze URL
+                        <span class="loading" id="urlLoading">⌛</span>
+                    </button>
+                </div>
+                <div id="urlResults" class="mt-3"></div>
+            </div>
+
+            <!-- Custom Content Tab -->
+            <div class="tab-pane fade" id="content">
+                <div class="mb-3">
+                    <textarea class="form-control mb-2" id="contentInput" rows="5" placeholder="Enter your content"></textarea>
+                    <input type="text" class="form-control mb-2" id="contentCompanyInput" placeholder="Enter your company name (default: Prachine Bangla)">
+                    <button class="btn btn-primary mt-2" onclick="generateContent()">
+                        Generate SEO Content
+                        <span class="loading" id="contentLoading">⌛</span>
+                    </button>
+                </div>
+                <div id="contentResults" class="mt-3"></div>
+            </div>
+
+            <!-- Paraphrase Tab -->
+            <div class="tab-pane fade" id="paraphrase">
+                <div class="mb-3">
+                    <textarea class="form-control mb-2" id="paraphraseInput" rows="5" placeholder="Enter text to paraphrase"></textarea>
+                    <input type="text" class="form-control mb-2" id="paraphraseCompanyInput" placeholder="Enter your company name (default: Prachine Bangla)">
+                    <button class="btn btn-primary mt-2" onclick="paraphraseText()">
+                        Paraphrase Text
+                        <span class="loading" id="paraphraseLoading">⌛</span>
+                    </button>
+                </div>
+                <div id="paraphraseResults" class="mt-3"></div>
+            </div>
+
+            <!-- Product Description Tab -->
+            <div class="tab-pane fade" id="product">
+                <div class="mb-3">
+                    <textarea class="form-control mb-2" id="productInput" rows="5" placeholder="Enter product information (name, features, specifications, etc.)"></textarea>
+                    <input type="text" class="form-control mb-2" id="productCompanyInput" placeholder="Enter your company name (default: Prachine Bangla)">
+                    <button class="btn btn-primary mt-2" onclick="generateProductDescription()">
+                        Generate Beautiful Description
+                        <span class="loading" id="productLoading">⌛</span>
+                    </button>
+                </div>
+                <div id="productResults" class="mt-3"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Get the base URL dynamically
+        const API_BASE_URL = window.location.origin + '/api';
+
+        function showLoading(id) {
+            document.getElementById(id).classList.add('active');
+        }
+
+        function hideLoading(id) {
+            document.getElementById(id).classList.remove('active');
+        }
+
+        async function analyzeUrl() {
+            const urlInput = document.getElementById('urlInput').value.trim();
+            const companyInput = document.getElementById('urlCompanyInput').value.trim();
+            const resultsDiv = document.getElementById('urlResults');
+            
+            if (!urlInput) {
+                resultsDiv.innerHTML = '<div class="alert alert-warning">Please enter a URL</div>';
+                return;
+            }
+            
+            showLoading('urlLoading');
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/analyze-url`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ 
+                        url: urlInput,
+                        company_name: companyInput 
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultsDiv.innerHTML = `
+                        <div class="card">
+                            <div class="card-body">
+                                <h5>Original Title:</h5>
+                                <p>${data.original_title || 'N/A'}</p>
+                                <h5>Original Description:</h5>
+                                <p>${data.original_description || 'N/A'}</p>
+                                <h5>Generated Title:</h5>
+                                <p>${data.generated_title}</p>
+                                <h5>Generated Description:</h5>
+                                <p>${data.generated_description}</p>
+                                <h5>Generated Keywords:</h5>
+                                <p>${data.generated_keywords ? data.generated_keywords.join(', ') : 'No keywords generated'}</p>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    resultsDiv.innerHTML = `<div class="alert alert-danger">${data.error}</div>`;
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = `<div class="alert alert-danger">Error: NetworkError when attempting to fetch resource. Please check if the URL is accessible.</div>`;
+            } finally {
+                hideLoading('urlLoading');
+            }
+        }
+
+        async function generateContent() {
+            const contentInput = document.getElementById('contentInput').value.trim();
+            const companyInput = document.getElementById('contentCompanyInput').value.trim();
+            const resultsDiv = document.getElementById('contentResults');
+            
+            if (!contentInput) {
+                resultsDiv.innerHTML = '<div class="alert alert-warning">Please enter some content</div>';
+                return;
+            }
+            
+            showLoading('contentLoading');
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/generate-content`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ 
+                        content: contentInput,
+                        company_name: companyInput 
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultsDiv.innerHTML = `
+                        <div class="card">
+                            <div class="card-body">
+                                <h5>Generated Title:</h5>
+                                <p>${data.generated_title}</p>
+                                <h5>Generated Description:</h5>
+                                <p>${data.generated_description}</p>
+                                <h5>Generated Keywords:</h5>
+                                <p>${data.generated_keywords ? data.generated_keywords.join(', ') : 'No keywords generated'}</p>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    resultsDiv.innerHTML = `<div class="alert alert-danger">${data.error}</div>`;
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = `<div class="alert alert-danger">Error: ${error.message}</div>`;
+            } finally {
+                hideLoading('contentLoading');
+            }
+        }
+
+        async function paraphraseText() {
+            const textInput = document.getElementById('paraphraseInput').value.trim();
+            const companyInput = document.getElementById('paraphraseCompanyInput').value.trim();
+            const resultsDiv = document.getElementById('paraphraseResults');
+            
+            if (!textInput) {
+                resultsDiv.innerHTML = '<div class="alert alert-warning">Please enter text to paraphrase</div>';
+                return;
+            }
+            
+            showLoading('paraphraseLoading');
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/paraphrase`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ 
+                        text: textInput,
+                        company_name: companyInput 
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultsDiv.innerHTML = `
+                        <div class="card">
+                            <div class="card-body">
+                                <h5>Paraphrased Text:</h5>
+                                <p>${data.paraphrased_text}</p>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    resultsDiv.innerHTML = `<div class="alert alert-danger">${data.error}</div>`;
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = `<div class="alert alert-danger">Error: ${error.message}</div>`;
+            } finally {
+                hideLoading('paraphraseLoading');
+            }
+        }
+
+        async function generateProductDescription() {
+            const productInput = document.getElementById('productInput').value.trim();
+            const companyInput = document.getElementById('productCompanyInput').value.trim();
+            const resultsDiv = document.getElementById('productResults');
+            
+            if (!productInput) {
+                resultsDiv.innerHTML = '<div class="alert alert-warning">Please enter product information</div>';
+                return;
+            }
+            
+            showLoading('productLoading');
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/product-description`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ 
+                        product_info: productInput,
+                        company_name: companyInput 
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    const description = data.product_description;
+                    const featuresList = description.features.map(feature => `<li>${feature}</li>`).join('');
+                    const benefitsList = description.benefits.map(benefit => `<li>${benefit}</li>`).join('');
+                    
+                    resultsDiv.innerHTML = `
+                        <div class="card mb-4">
+                            <div class="card-header bg-primary text-white">
+                                <h5 class="mb-0">Product Description</h5>
+                            </div>
+                            <div class="card-body">
+                                <h5>Short Description:</h5>
+                                <p>${description.short_description}</p>
+                                
+                                <h5>Detailed Description:</h5>
+                                <div class="mb-3">${description.long_description.replace(/\n/g, '<br>')}</div>
+                                
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <h5>Key Features:</h5>
+                                        <ul class="feature-list">
+                                            ${featuresList}
+                                        </ul>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h5>Benefits:</h5>
+                                        <ul class="benefits-list">
+                                            ${benefitsList}
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-outline-primary" onclick="copyToClipboard('short')">Copy Short Description</button>
+                            <button class="btn btn-outline-primary" onclick="copyToClipboard('full')">Copy Full Description</button>
+                        </div>
+                    `;
+                    
+                    // Store the description data for clipboard functionality
+                    window.productDescriptionData = description;
+                } else {
+                    resultsDiv.innerHTML = `<div class="alert alert-danger">${data.error}</div>`;
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = `<div class="alert alert-danger">Error: ${error.message}</div>`;
+            } finally {
+                hideLoading('productLoading');
+            }
+        }
+        
+        function copyToClipboard(type) {
+            if (!window.productDescriptionData) return;
+            
+            const description = window.productDescriptionData;
+            let textToCopy = '';
+            
+            if (type === 'short') {
+                textToCopy = description.short_description;
+            } else {
+                // Full description with features and benefits
+                const featuresList = description.features.map(feature => `• ${feature}`).join('\n');
+                const benefitsList = description.benefits.map(benefit => `• ${benefit}`).join('\n');
+                
+                textToCopy = `${description.short_description}\n\n${description.long_description}\n\nKey Features:\n${featuresList}\n\nBenefits:\n${benefitsList}`;
+            }
+            
+            navigator.clipboard.writeText(textToCopy)
+                .then(() => {
+                    alert('Description copied to clipboard!');
+                })
+                .catch(err => {
+                    console.error('Failed to copy text: ', err);
+                    alert('Failed to copy to clipboard. Please try again.');
+                });
+        }
+    </script>
+</body>
+</html>
